@@ -23,8 +23,8 @@
 
 void coolant_init()
 {
-  COOLANT_FLOOD_DDR |= (1 << COOLANT_FLOOD_BIT); // Configure as output pin.
-  COOLANT_MIST_DDR |= (1 << COOLANT_MIST_BIT); // Configure as output pin.
+  COOLANT_FLOOD_DDR |= COOLANT_FLOOD_MASK; // Configure as output pin.
+  COOLANT_MIST_DDR |= COOLANT_MIST_MASK; // Configure as output pin.
   coolant_stop();
 }
 
@@ -34,16 +34,16 @@ uint8_t coolant_get_state()
 {
   uint8_t cl_state = COOLANT_STATE_DISABLE;
   #ifdef INVERT_COOLANT_FLOOD_PIN
-    if (bit_isfalse(COOLANT_FLOOD_PORT,(1 << COOLANT_FLOOD_BIT))) {
+    if (bit_isfalse(COOLANT_FLOOD_PORT,COOLANT_FLOOD_MASK)) {
   #else
-    if (bit_istrue(COOLANT_FLOOD_PORT,(1 << COOLANT_FLOOD_BIT))) {
+    if (bit_istrue(COOLANT_FLOOD_PORT,COOLANT_FLOOD_MASK)) {
   #endif
     cl_state |= COOLANT_STATE_FLOOD;
   }
   #ifdef INVERT_COOLANT_MIST_PIN
-    if (bit_isfalse(COOLANT_MIST_PORT,(1 << COOLANT_MIST_BIT))) {
+    if (bit_isfalse(COOLANT_MIST_PORT,COOLANT_MIST_MASK)) {
   #else
-    if (bit_istrue(COOLANT_MIST_PORT,(1 << COOLANT_MIST_BIT))) {
+    if (bit_istrue(COOLANT_MIST_PORT,COOLANT_MIST_MASK)) {
   #endif
     cl_state |= COOLANT_STATE_MIST;
   }
@@ -56,14 +56,14 @@ uint8_t coolant_get_state()
 void coolant_stop()
 {
   #ifdef INVERT_COOLANT_FLOOD_PIN
-    COOLANT_FLOOD_PORT |= (1 << COOLANT_FLOOD_BIT);
+    COOLANT_FLOOD_PORT |= COOLANT_FLOOD_MASK;
   #else
-    COOLANT_FLOOD_PORT &= ~(1 << COOLANT_FLOOD_BIT);
+    COOLANT_FLOOD_PORT &= ~COOLANT_FLOOD_MASK;
   #endif
   #ifdef INVERT_COOLANT_MIST_PIN
-    COOLANT_MIST_PORT |= (1 << COOLANT_MIST_BIT);
+    COOLANT_MIST_PORT |= COOLANT_MIST_MASK;
   #else
-    COOLANT_MIST_PORT &= ~(1 << COOLANT_MIST_BIT);
+    COOLANT_MIST_PORT &= ~COOLANT_MIST_MASK;
   #endif
 }
 
@@ -78,29 +78,29 @@ void coolant_set_state(uint8_t mode)
   
   if (mode & COOLANT_FLOOD_ENABLE) {
     #ifdef INVERT_COOLANT_FLOOD_PIN
-      COOLANT_FLOOD_PORT &= ~(1 << COOLANT_FLOOD_BIT);
+      COOLANT_FLOOD_PORT &= ~COOLANT_FLOOD_MASK;
     #else
-      COOLANT_FLOOD_PORT |= (1 << COOLANT_FLOOD_BIT);
+      COOLANT_FLOOD_PORT |= COOLANT_FLOOD_MASK;
     #endif
 	} else {
 	  #ifdef INVERT_COOLANT_FLOOD_PIN
-			COOLANT_FLOOD_PORT |= (1 << COOLANT_FLOOD_BIT);
+			COOLANT_FLOOD_PORT |= COOLANT_FLOOD_MASK;
 		#else
-			COOLANT_FLOOD_PORT &= ~(1 << COOLANT_FLOOD_BIT);
+			COOLANT_FLOOD_PORT &= ~COOLANT_FLOOD_MASK;
 		#endif
 	}
   
 	if (mode & COOLANT_MIST_ENABLE) {
 		#ifdef INVERT_COOLANT_MIST_PIN
-			COOLANT_MIST_PORT &= ~(1 << COOLANT_MIST_BIT);
+			COOLANT_MIST_PORT &= ~COOLANT_MIST_MASK;
 		#else
-			COOLANT_MIST_PORT |= (1 << COOLANT_MIST_BIT);
+			COOLANT_MIST_PORT |= COOLANT_MIST_MASK;
 		#endif
 	} else {
 		#ifdef INVERT_COOLANT_MIST_PIN
-			COOLANT_MIST_PORT |= (1 << COOLANT_MIST_BIT);
+			COOLANT_MIST_PORT |= COOLANT_MIST_MASK;
 		#else
-			COOLANT_MIST_PORT &= ~(1 << COOLANT_MIST_BIT);
+			COOLANT_MIST_PORT &= ~COOLANT_MIST_MASK;
 		#endif
 	}
 	

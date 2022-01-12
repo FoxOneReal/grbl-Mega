@@ -20,17 +20,18 @@
 
 #include "grbl.h"
 
+#define CONTROL_MASK_ALL      (CONTROL_MASK(RESET)|CONTROL_MASK(FEED_HOLD)|CONTROL_MASK(CYCLE_START)|CONTROL_MASK(SAFETY_DOOR))
 
 void system_init()
 {
-  CONTROL_DDR &= ~(CONTROL_MASK); // Configure as input pins
+  CONTROL_DDR &= ~CONTROL_MASK_ALL; // Configure as input pins
   #ifdef DISABLE_CONTROL_PIN_PULL_UP
-    CONTROL_PORT &= ~(CONTROL_MASK); // Normal low operation. Requires external pull-down.
+    CONTROL_PORT &= ~CONTROL_MASK_ALL; // Normal low operation. Requires external pull-down.
   #else
-    CONTROL_PORT |= CONTROL_MASK;   // Enable internal pull-up resistors. Normal high operation.
+    CONTROL_PORT |= CONTROL_MASK_ALL;   // Enable internal pull-up resistors. Normal high operation.
   #endif
-  CONTROL_PCMSK |= CONTROL_MASK;  // Enable specific pins of the Pin Change Interrupt
-  PCICR |= (1 << CONTROL_INT);   // Enable Pin Change Interrupt
+  CONTROL_INT_PCMSK |= CONTROL_MASK_ALL;  // Enable specific pins of the Pin Change Interrupt
+  PCICR |= bit(CONTROL_INT_EN_BIT);   // Enable Pin Change Interrupt
 }
 
 
@@ -40,15 +41,15 @@ void system_init()
 uint8_t system_control_get_state()
 {
   uint8_t control_state = 0;
-  uint8_t pin = (CONTROL_PIN & CONTROL_MASK);
+  uint8_t pin = (CONTROL_PIN & CONTROL_MASK_ALL);
   #ifdef INVERT_CONTROL_PIN_MASK
     pin ^= INVERT_CONTROL_PIN_MASK;
   #endif
   if (pin) {
-    if (bit_isfalse(pin,(1<<CONTROL_SAFETY_DOOR_BIT))) { control_state |= CONTROL_PIN_INDEX_SAFETY_DOOR; }
-    if (bit_isfalse(pin,(1<<CONTROL_RESET_BIT))) { control_state |= CONTROL_PIN_INDEX_RESET; }
-    if (bit_isfalse(pin,(1<<CONTROL_FEED_HOLD_BIT))) { control_state |= CONTROL_PIN_INDEX_FEED_HOLD; }
-    if (bit_isfalse(pin,(1<<CONTROL_CYCLE_START_BIT))) { control_state |= CONTROL_PIN_INDEX_CYCLE_START; }
+    if (bit_isfalse(pin,CONTROL_MASK(SAFETY_DOOR))) { control_state |= CONTROL_PIN_INDEX_SAFETY_DOOR; }
+    if (bit_isfalse(pin,CONTROL_MASK(RESET))) { control_state |= CONTROL_PIN_INDEX_RESET; }
+    if (bit_isfalse(pin,CONTROL_MASK(FEED_HOLD))) { control_state |= CONTROL_PIN_INDEX_FEED_HOLD; }
+    if (bit_isfalse(pin,CONTROL_MASK(CYCLE_START))) { control_state |= CONTROL_PIN_INDEX_CYCLE_START; }
   }
   return(control_state);
 }
