@@ -28,6 +28,7 @@
 #include "nuts_bolts.h"
 
 #define _CONCAT(x,y) x##y
+#define _STR(p) #p
 
 #define DDR(port) _CONCAT(DDR,port)
 #define PORT(port) _CONCAT(PORT,port)
@@ -85,12 +86,15 @@
 #define CONTROL_PORT      PORT(CONTROL_P)
 #define CONTROL_MASK(n)   bit(CONTROL_B_##n)
 
+//#define _CHAR(p) #@p
+//#define INT_PORT(p) _CHAR(p)
+#define	INT_PORT(p)	_STR(p)[0]
 
 #ifdef CPU_MAP_2560_INITIAL // (Arduino Mega 2560) Working @EliteEng
 
   // Serial port interrupt vectors
-  #define SERIAL_RX USART0_RX_vect
-  #define SERIAL_UDRE USART0_UDRE_vect
+  #define SERIAL_RX_vect USART0_RX_vect
+  #define SERIAL_UDRE_vect USART0_UDRE_vect
 
   // Define step pulse output pins. NOTE: All step bit pins must be on the same port.
   #define STEP_P_0   A
@@ -136,9 +140,6 @@
 // xmin PCINT4 PCINT0_vect PCMSK0/bit(4)
 // ymin PCINT5 PCINT0_vect PCMSK0/bit(5)
 // zmin PCINT6 PCINT0_vect PCMSK0/bit(6)
-  #define LIMIT_INT_EN_BIT PCIE0  // Pin change interrupt enable bit
-  #define LIMIT_INT_vect   PCINT0_vect 
-  #define LIMIT_INT_PCMSK  PCMSK0 // Pin change interrupt register
   
   // Define spindle enable and spindle direction output pins.
   #define SPINDLE_ENABLE_P      H
@@ -168,9 +169,6 @@
 // feed_hold   PCINT17 PCINT2_vect PCMSK2/bit(1)
 // cycle_start PCINT18 PCINT2_vect PCMSK2/bit(2)
 // safety_door PCINT19 PCINT2_vect PCMSK2/bit(3)
-  #define CONTROL_INT_EN_BIT PCIE2  // Pin change interrupt enable bit
-  #define CONTROL_INT_vect   PCINT2_vect
-  #define CONTROL_INT_PCMSK  PCMSK2 // Pin change interrupt register
   
   // Define probe switch input pin.
   #define PROBE_P        K
@@ -201,8 +199,8 @@
 #ifdef CPU_MAP_2560_RAMPS_BOARD // (Arduino Mega 2560) with Ramps 1.4-1.6 Board
 
   // Serial port interrupt vectors
-  #define SERIAL_RX USART0_RX_vect
-  #define SERIAL_UDRE USART0_UDRE_vect
+  #define SERIAL_RX_vect USART0_RX_vect
+  #define SERIAL_UDRE_vect USART0_UDRE_vect
   
   // Define step pulse output pins.
   #define STEP_P_0 F	// X Step - Pin A0 (PF0)
@@ -267,7 +265,6 @@
 // ymax PCINT9  PCINT1_vect PCMSK1/bit(1)
 // zmin INT3
 // zmax INT2
-  #define DISABLE_HW_LIMITS
 
   // Define spindle enable and spindle direction output pins.
   #define SPINDLE_ENABLE_P      G
@@ -297,9 +294,6 @@
 // feed_hold   PCINT18 PCINT2_vect PCMSK2/bit(2)
 // cycle_start PCINT19 PCINT2_vect PCMSK2/bit(3)
 // safety_door PCINT20 PCINT2_vect PCMSK2/bit(4)
-  #define CONTROL_INT_EN_BIT PCIE2  // Pin change interrupt enable pin
-  #define CONTROL_INT_vect   PCINT2_vect
-  #define CONTROL_INT_PCMSK  PCMSK2 // Pin change interrupt register
 
   // Define probe switch input pin.
   #define PROBE_P         K

@@ -31,12 +31,12 @@ volatile uint8_t sleep_counter;
 static void sleep_enable() { 
   sleep_counter = 0; // Reset sleep counter
   TCNT3 = 0;  // Reset timer3 counter register
-  TIMSK3 |= (1<<TOIE3); // Enable timer3 overflow interrupt
+  TIMSK3 |= bit(TOIE3); // Enable timer3 overflow interrupt
 } 
 
 
 // Disable sleep timer.
-static void sleep_disable() {  TIMSK3 &= ~(1<<TOIE3); } // Disable timer overflow interrupt
+static void sleep_disable() {  TIMSK3 &= ~bit(TOIE3); } // Disable timer overflow interrupt
 
 
 // Initialization routine for sleep timer.
@@ -46,11 +46,11 @@ void sleep_init()
   // NOTE: By using an overflow interrupt, the timer is automatically reloaded upon overflow.
   TCCR3B = 0; // Normal operation. Overflow.
   TCCR3A = 0;
-  TCCR3B = (TCCR3B & ~((1<<CS32) | (1<<CS31))) | (1<<CS30); // Stop timer
-  // TCCR3B |= (1<<CS32); // Enable timer with 1/256 prescaler. ~4.4min max with uint8 and 1.05sec/tick
-  // TCCR3B |= (1<<CS31); // Enable timer with 1/8 prescaler. ~8.3sec max with uint8 and 32.7msec/tick
-  TCCR3B |= (1<<CS31)|(1<<CS30); // Enable timer with 1/64 prescaler. ~66.8sec max with uint8 and 0.262sec/tick
-  // TCCR3B |= (1<<CS32)|(1<<CS30); // Enable timer with 1/1024 prescaler. ~17.8min max with uint8 and 4.19sec/tick
+  TCCR3B = (TCCR3B & ~(bit(CS32) | bit(CS31))) | bit(CS30); // Stop timer
+  // TCCR3B |= bit(CS32); // Enable timer with 1/256 prescaler. ~4.4min max with uint8 and 1.05sec/tick
+  // TCCR3B |= bit(CS31); // Enable timer with 1/8 prescaler. ~8.3sec max with uint8 and 32.7msec/tick
+  TCCR3B |= bit(CS31)|bit(CS30); // Enable timer with 1/64 prescaler. ~66.8sec max with uint8 and 0.262sec/tick
+  // TCCR3B |= bit(CS32)|bit(CS30); // Enable timer with 1/1024 prescaler. ~17.8min max with uint8 and 4.19sec/tick
   sleep_disable();
 }
 

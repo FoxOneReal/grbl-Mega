@@ -311,11 +311,7 @@ void st_wake_up()
   
   // Enable stepper drivers.
   for (idx = 0; idx < N_AXIS; idx++)
-    if (bit_istrue(settings.flags,BITFLAG_INVERT_ST_ENABLE)) {
-      bit_true( *hw_disable_port[idx], hw_disable_mask[idx] );
-    } else {
-      bit_false( *hw_disable_port[idx], hw_disable_mask[idx] );
-    }
+	bit_write( *(hw_disable_port[idx]), hw_disable_mask[idx], bit_istrue(settings.flags,BITFLAG_INVERT_ST_ENABLE) );
   // Initialize stepper output bits to ensure first ISR call does not step.
   st.step_outbits = settings.step_invert_mask;
 
@@ -354,11 +350,7 @@ void st_go_idle()
   }
   if (bit_istrue(settings.flags,BITFLAG_INVERT_ST_ENABLE)) { pin_state = !pin_state; } // Apply pin invert.
   for (idx = 0; idx < N_AXIS; idx++)
-    if ( pin_state ) {
-	  bit_true( *hw_disable_port[idx], hw_disable_mask[idx] );
-    } else {
-	  bit_false( *hw_disable_port[idx], hw_disable_mask[idx] );
-    }
+	bit_write( *hw_disable_port[idx], hw_disable_mask[idx], pin_state );
 }
 
 
@@ -418,22 +410,14 @@ ISR(TIMER1_COMPA_vect)
 
   // Set the direction pins a couple of nanoseconds before we step the steppers
   for ( i = 0; i < N_AXIS; i++ )
-    if ( bit_istrue(st.dir_outbits,bit(i)) ) {
-      bit_true( *hw_dir_port[i], hw_dir_mask[i] );
-	} else {
-      bit_false( *hw_dir_port[i],hw_dir_mask[i] );
-	}
+	bit_write( *hw_dir_port[i], hw_dir_mask[i], bit_istrue(st.dir_outbits,bit(i)) );
 
   // Then pulse the stepping pins
   #ifdef STEP_PULSE_DELAY
     st.step_bits = st.step_outbits; // Store out_bits to prevent overwriting.
   #else  // Normal operation
     for ( i = 0; i < N_AXIS; i++ )
-	  if ( bit_istrue(st.step_outbits,bit(i)) ) {
-        bit_true( *hw_step_port[i], hw_step_mask[i] );
-	  } else {
-        bit_false( *hw_step_port[i], hw_step_mask[i] );
-	  }
+	  bit_write( *hw_step_port[i], hw_step_mask[i], bit_istrue(st.step_outbits,bit(i)) );
   #endif
 
 
@@ -543,11 +527,7 @@ ISR(TIMER0_OVF_vect)
   int i;
   // Reset stepping pins (leave the direction pins)
   for ( i = 0; i < N_AXIS; i++ )
-	if ( bit_istrue(settings.step_invert_mask,bit(i)) ) {
-	  bit_true(*hw_step_port[i],hw_step_mask[i]);
-	} else {
-	  bit_false(*hw_step_port[i],hw_step_mask[i]);
-	}
+	bit_write( *hw_step_port[i], hw_step_mask[i], bit_istrue(settings.step_invert_mask,bit(i)) );
   TCCR0B = 0; // Disable Timer0 to prevent re-entering this interrupt when it's not needed.
 }
 
@@ -560,11 +540,7 @@ ISR(TIMER0_OVF_vect)
   ISR(TIMER0_COMPA_vect)
   {
 	for ( i = 0; i < N_AXIS; i++ )
-	  if ( bit_istrue(st.step_bits,bit(i)) ) {
-        bit_true(*hw_step_port[i],hw_step_mask[i]);
-	  } else {
-        bit_false(*hw_step_port[i],hw_step_mask[i]);
-	  }
+	  bit_write( *hw_step_port[i], hw_step_mask[i], bit_istrue(st.step_bits,bit(i)) );
   }
 #endif
 
@@ -590,16 +566,8 @@ void st_reset()
   st.dir_outbits = settings.dir_invert_mask; // Initialize direction bits to default.
   st.step_outbits = settings.step_invert_mask;// Initialize step bits to default.
   for ( i = 0; i < N_AXIS; i++ ) {
-    if ( bit_istrue(st.dir_outbits,bit(i)) ) {
-	  bit_true(*hw_dir_port[i], hw_dir_mask[i]);
-	} else {
-	  bit_false(*hw_dir_port[i], hw_dir_mask[i]);
-	}
-    if ( bit_istrue(st.step_outbits,bit(i)) ) {
-	  bit_true(*hw_step_port[i], hw_step_mask[i]);
-	} else {
-	  bit_false(*hw_step_port[i], hw_step_mask[i]);
-	}
+	bit_write( *hw_dir_port[i], hw_dir_mask[i], bit_istrue(st.dir_outbits,bit(i)) );
+	bit_write( *hw_step_port[i], hw_step_mask[i], bit_istrue(st.step_outbits,bit(i)) );
   }
 }
 
@@ -610,9 +578,9 @@ void stepper_init()
   int i;
   // Configure step and direction interface pins
   for ( i = 0; i < N_AXIS; i++ ) {
-    bit_true(*hw_step_ddr[i], hw_step_mask[i]);
-	bit_true(*hw_disable_ddr[i], hw_disable_mask[i]);
-	bit_true(*hw_dir_ddr[i], hw_dir_mask[i]);
+    bit_true( *hw_step_ddr[i], hw_step_mask[i] );
+	bit_true( *hw_disable_ddr[i], hw_disable_mask[i] );
+	bit_true( *hw_dir_ddr[i], hw_dir_mask[i] );
   }
 
   // Configure Timer 1: Stepper Driver Interrupt

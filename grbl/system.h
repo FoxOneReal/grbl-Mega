@@ -195,5 +195,7 @@ void system_set_exec_accessory_override_flag(uint8_t mask);
 void system_clear_exec_motion_overrides();
 void system_clear_exec_accessory_overrides();
 
+// Pin change interrupt for pin-out commands
+void system_control_isr();
 
 #endif

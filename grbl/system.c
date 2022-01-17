@@ -30,8 +30,11 @@ void system_init()
   #else
     CONTROL_PORT |= CONTROL_MASK_ALL;   // Enable internal pull-up resistors. Normal high operation.
   #endif
-  CONTROL_INT_PCMSK |= CONTROL_MASK_ALL;  // Enable specific pins of the Pin Change Interrupt
-  PCICR |= bit(CONTROL_INT_EN_BIT);   // Enable Pin Change Interrupt
+
+  int_enable( INT_PORT(CONTROL_P), CONTROL_B_RESET, FALLING_EDGE_TRIGGER, HANDLER_SYSTEM );
+  int_enable( INT_PORT(CONTROL_P), CONTROL_B_FEED_HOLD, FALLING_EDGE_TRIGGER, HANDLER_SYSTEM );
+  int_enable( INT_PORT(CONTROL_P), CONTROL_B_CYCLE_START, FALLING_EDGE_TRIGGER, HANDLER_SYSTEM );
+  int_enable( INT_PORT(CONTROL_P), CONTROL_B_SAFETY_DOOR, FALLING_EDGE_TRIGGER, HANDLER_SYSTEM );
 }
 
 
@@ -59,7 +62,7 @@ uint8_t system_control_get_state()
 // only the realtime command execute variable to have the main program execute these when
 // its ready. This works exactly like the character-based realtime commands when picked off
 // directly from the incoming serial data stream.
-ISR(CONTROL_INT_vect)
+void system_control_isr()
 {
   uint8_t pin = system_control_get_state();
   if (pin) {

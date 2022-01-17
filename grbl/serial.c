@@ -67,16 +67,16 @@ void serial_init()
   // Set baud rate
   #if BAUD_RATE < 57600
     uint16_t UBRR0_value = ((F_CPU / (8L * BAUD_RATE)) - 1)/2 ;
-    UCSR0A &= ~(1 << U2X0); // baud doubler off  - Only needed on Uno XXX
+    UCSR0A &= ~bit(U2X0); // baud doubler off  - Only needed on Uno XXX
   #else
     uint16_t UBRR0_value = ((F_CPU / (4L * BAUD_RATE)) - 1)/2;
-    UCSR0A |= (1 << U2X0);  // baud doubler on for high baud rates, i.e. 115200
+    UCSR0A |= bit(U2X0);  // baud doubler on for high baud rates, i.e. 115200
   #endif
   UBRR0H = UBRR0_value >> 8;
   UBRR0L = UBRR0_value;
 
   // enable rx, tx, and interrupt on complete reception of a byte
-  UCSR0B |= (1<<RXEN0 | 1<<TXEN0 | 1<<RXCIE0);
+  UCSR0B |= bit(RXEN0) | bit(TXEN0) | bit(RXCIE0);
 
   // defaults to 8-bit, no parity, 1 stop bit
 }
@@ -99,12 +99,12 @@ void serial_write(uint8_t data) {
   serial_tx_buffer_head = next_head;
 
   // Enable Data Register Empty Interrupt to make sure tx-streaming is running
-  UCSR0B |=  (1 << UDRIE0);
+  UCSR0B |= bit(UDRIE0);
 }
 
 
 // Data Register Empty Interrupt handler
-ISR(SERIAL_UDRE)
+ISR(SERIAL_UDRE_vect)
 {
   uint8_t tail = serial_tx_buffer_tail; // Temporary serial_tx_buffer_tail (to optimize for volatile)
 
@@ -118,7 +118,7 @@ ISR(SERIAL_UDRE)
   serial_tx_buffer_tail = tail;
 
   // Turn off Data Register Empty Interrupt to stop tx-streaming if this concludes the transfer
-  if (tail == serial_tx_buffer_head) { UCSR0B &= ~(1 << UDRIE0); }
+  if (tail == serial_tx_buffer_head) { UCSR0B &= ~bit(UDRIE0); }
 }
 
 
@@ -140,7 +140,7 @@ uint8_t serial_read()
 }
 
 
-ISR(SERIAL_RX)
+ISR(SERIAL_RX_vect)
 {
   uint8_t data = UDR0;
   uint8_t next_head;

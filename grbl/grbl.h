@@ -61,6 +61,7 @@
 #include "stepper.h"
 #include "jog.h"
 #include "sleep.h"
+#include "ext_int.h"
 
 // ---------------------------------------------------------------------------------------
 // COMPILE-TIME ERROR CHECKING OF DEFINE VALUES:

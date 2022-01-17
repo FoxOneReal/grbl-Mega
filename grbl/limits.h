@@ -38,4 +38,7 @@ void limits_go_home(uint8_t cycle_mask);
 // Check for soft limit violations
 void limits_soft_check(float *target);
 
+// Limit pin change interrupt 
+void limits_isr();
+
 #endif

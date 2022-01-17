@@ -43,7 +43,6 @@ static const uint8_t hw_min_limit_mask[N_LIMIT_AXIS] = { MIN_LIMIT_MASK(X_AXIS),
 void limits_init()
 {
   uint8_t idx;
-  uint8_t limit_mask = 0;
 
   for ( idx = 0; idx<N_LIMIT_AXIS; idx++ ) {
     bit_false( *hw_max_limit_ddr[idx], hw_max_limit_mask[idx] ); // configure as an input pin
@@ -56,14 +55,16 @@ void limits_init()
 	  bit_true( *hw_max_limit_port[idx], hw_max_limit_mask[idx] );// Enable internal pull-up resistors. Normal high operation.
 	  bit_true( *hw_min_limit_port[idx], hw_min_limit_mask[idx] );// Enable internal pull-up resistors. Normal high operation.
     #endif
-
-	limit_mask |= hw_max_limit_mask[idx];
-	limit_mask |= hw_min_limit_mask[idx];
   }
+
   #ifndef DISABLE_HW_LIMITS
     if (bit_istrue(settings.flags,BITFLAG_HARD_LIMIT_ENABLE)) {
-      LIMIT_INT_PCMSK |= limit_mask; // Enable specific pins of the Pin Change Interrupt
-      PCICR |= bit(LIMIT_INT_EN_BIT); // Enable Pin Change Interrupt
+		int_enable( INT_PORT(MIN_LIMIT_P_0), MIN_LIMIT_B_0, FALLING_EDGE_TRIGGER, HANDLER_LIMITS );
+		int_enable( INT_PORT(MIN_LIMIT_P_1), MIN_LIMIT_B_1, FALLING_EDGE_TRIGGER, HANDLER_LIMITS );
+		int_enable( INT_PORT(MIN_LIMIT_P_2), MIN_LIMIT_B_2, FALLING_EDGE_TRIGGER, HANDLER_LIMITS );
+		int_enable( INT_PORT(MAX_LIMIT_P_0), MAX_LIMIT_B_0, FALLING_EDGE_TRIGGER, HANDLER_LIMITS );
+		int_enable( INT_PORT(MAX_LIMIT_P_1), MAX_LIMIT_B_1, FALLING_EDGE_TRIGGER, HANDLER_LIMITS );
+		int_enable( INT_PORT(MAX_LIMIT_P_2), MAX_LIMIT_B_2, FALLING_EDGE_TRIGGER, HANDLER_LIMITS );
     } else {
       limits_disable();
     }
@@ -80,9 +81,12 @@ void limits_init()
 void limits_disable()
 {
   #ifndef DISABLE_HW_LIMITS
-	// not necessary
-    //LIMIT_INT_PCMSK &= ~LIMIT_MASK;  // Disable specific pins of the Pin Change Interrupt
-    PCICR &= ~bit(LIMIT_INT_EN_BIT);  // Disable Pin Change Interrupt
+	int_disable( INT_PORT(MIN_LIMIT_P_0), MIN_LIMIT_B_0 );
+	int_disable( INT_PORT(MIN_LIMIT_P_1), MIN_LIMIT_B_1 );
+	int_disable( INT_PORT(MIN_LIMIT_P_2), MIN_LIMIT_B_2 );
+	int_disable( INT_PORT(MAX_LIMIT_P_0), MAX_LIMIT_B_0 );
+	int_disable( INT_PORT(MAX_LIMIT_P_1), MAX_LIMIT_B_1 );
+	int_disable( INT_PORT(MAX_LIMIT_P_2), MAX_LIMIT_B_2 );
   #endif
 }
 
@@ -124,7 +128,7 @@ uint8_t limits_get_state()
 // special pinout for an e-stop, but it is generally recommended to just directly connect
 // your e-stop switch to the Arduino reset pin, since it is the most correct way to do this.
   #ifndef ENABLE_SOFTWARE_DEBOUNCE
-    ISR(LIMIT_INT_vect) // DEFAULT: Limit pin change interrupt process. 
+    void limits_isr() // DEFAULT: Limit pin change interrupt process. 
     {
       // Ignore limit switches if already in an alarm state or in-process of executing an alarm.
       // When in the alarm state, Grbl should have been reset or will force a reset, so any pending 
@@ -148,7 +152,7 @@ uint8_t limits_get_state()
     }  
   #else // OPTIONAL: Software debounce limit pin routine.
     // Upon limit pin change, enable watchdog timer to create a short delay. 
-    ISR(LIMIT_INT_vect) { if (!(WDTCSR & bit(WDIE))) { WDTCSR |= bit(WDIE); } }
+	void limits_isr() { if (!(WDTCSR & bit(WDIE))) { WDTCSR |= bit(WDIE); } }
     ISR(WDT_vect) // Watchdog timer ISR
     {
       WDTCSR &= ~bit(WDIE); // Disable watchdog timer. 
